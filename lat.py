@@ -2,10 +2,20 @@ import csv
 
 latencies = []
 
-with open("latest.csv", newline='') as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        latencies.append(float(row["latency_ms"]))
+try:
+    with open("latest.csv", newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Make sure the column exists
+            if "latency_ms" in row and row["latency_ms"]:
+                latencies.append(float(row["latency_ms"]))
+except FileNotFoundError:
+    print("File latest.csv not found")
+    exit()
+
+if not latencies:
+    print("No latency data found in CSV. Please check the file and column name.")
+    exit()
 
 # Create bins for histogram
 bin_size = 10  # ms per bin
