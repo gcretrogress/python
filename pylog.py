@@ -14,21 +14,27 @@ for filename in os.listdir("."):
             if ":blah-req" not in line and ":blah-res" not in line:
                 continue
 
-            ts = line.split()[0]
-            ts = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S,%f")
+            if "id=" not in line:
+                continue
 
-            id_part = line.split("id=")[1]
-            id_ = id_part.split("}")[0]
+            try:
+                ts_str = line.split()[0]
+                ts = datetime.strptime(ts_str, "%Y-%m-%dT%H:%M:%S,%f")
 
-            if ":blah-req" in line:
-                pending.setdefault(id_, []).append(ts)
+                id_ = line.split("id=")[1].split("}")[0]
 
-            elif ":blah-res" in line:
-                if id_ in pending and pending[id_]:
-                    req_time = pending[id_].pop(0)
-                    latency = (ts - req_time).total_seconds() * 1000
+                if ":blah-req" in line:
+                    pending.setdefault(id_, []).append(ts)
 
-                    rows.append((id_, req_time, ts, latency))
+                elif ":blah-res" in line:
+                    if id_ in pending and pending[id_] :
+                        req_time = pending[id_].pop(0)
+                        latency = (ts - req_time).total_seconds() * 1000
+                        rows.append((id_, req_time, ts, latency))
+
+            except Exception:
+                # skip malformed lines
+                continue
 
 
 print("ID,REQ_TIME,RES_TIME,LATENCY_MS")
