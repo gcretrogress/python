@@ -4,7 +4,7 @@ from datetime import datetime
 import csv
 
 pattern = re.compile(
-    r'(?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2},\d+).*:blah-(?P<type>req|res).*id=(?P<id>\d+)'
+    r'(?P<ts>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2},\d+).*?:blah-(?P<type>req|res)\s+\{id=(?P<id>\d+)\}'
 )
 
 pending = {}
