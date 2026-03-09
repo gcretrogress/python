@@ -6,8 +6,9 @@ try:
     with open("latest.csv", newline='') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            # Make sure the column exists
-            if "latency_ms" in row and row["latency_ms"]:
+            # Normalize keys to lowercase
+            row = {k.lower(): v for k, v in row.items()}
+            if "latency_ms".lower() in row and row["latency_ms"]:
                 latencies.append(float(row["latency_ms"]))
 except FileNotFoundError:
     print("File latest.csv not found")
