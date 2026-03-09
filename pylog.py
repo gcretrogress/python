@@ -1,17 +1,8 @@
 import os
-import re
 from datetime import datetime
-import csv
-
-pattern = re.compile(
-    r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2},\d+).*:blah-(req|res).*id=(\d+)'
-)
 
 pending = {}
 rows = []
-
-def parse_ts(ts):
-    return datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S,%f")
 
 for filename in os.listdir("."):
     if not filename.endswith(".log"):
@@ -19,33 +10,27 @@ for filename in os.listdir("."):
 
     with open(filename) as f:
         for line in f:
-            m = pattern.search(line)
-            if not m:
+
+            if ":blah-req" not in line and ":blah-res" not in line:
                 continue
 
-            ts = parse_ts(m.group("ts"))
-            msg_type = m.group("type")
-            id_ = m.group("id")
+            ts = line.split()[0]
+            ts = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S,%f")
 
-            if msg_type == "req":
+            id_part = line.split("id=")[1]
+            id_ = id_part.split("}")[0]
+
+            if ":blah-req" in line:
                 pending.setdefault(id_, []).append(ts)
 
-            elif msg_type == "res":
+            elif ":blah-res" in line:
                 if id_ in pending and pending[id_]:
                     req_time = pending[id_].pop(0)
-                    latency_ms = (ts - req_time).total_seconds() * 1000
+                    latency = (ts - req_time).total_seconds() * 1000
 
-                    rows.append((id_, req_time, ts, latency_ms))
+                    rows.append((id_, req_time, ts, latency))
 
-# Print simple table
-print(f"{'ID':>12} {'REQ TIME':>26} {'RES TIME':>26} {'LATENCY(ms)':>12}")
+
+print("ID,REQ_TIME,RES_TIME,LATENCY_MS")
 for r in rows:
-    print(f"{r[0]:>12} {str(r[1]):>26} {str(r[2]):>26} {r[3]:>12.3f}")
-
-# Save CSV
-with open("latency_results.csv", "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["id", "req_time", "res_time", "latency_ms"])
-    writer.writerows(rows)
-
-print("\nSaved results to latency_results.csv")
+    print(f"{r[0]},{r[1]},{r[2]},{r[3]:.3f}")
